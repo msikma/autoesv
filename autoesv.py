@@ -37,20 +37,50 @@ def read_bin(file):
   with open(file, 'rb') as f:
     return f.read()
 
-def extract_pkdata6(data):
-  # Define a named tuple structure for easier access to the parsed data.
+def extract_pkdata(data):
+  # Returns a named tuple with information about this pk6 file.
+  #
+  # Note that this extracts "training_bag_hits" and "training_bag",
+  # which do not exist in pk7 files. We ignore this because we're
+  # not using them anyway.
+  #
+  # This information was taken from PKHeX:
+  # <https://github.com/kwsch/PKHeX/blob/master/PKHeX.Core/PKM/PK6.cs>
   Pokemon = namedtuple('Pokemon', 'encryption_constant sanity checksum species held_item tid sid exp ability ability_number training_bag_hits training_bag pid')
   frm = '<IHHHHHHIBBBBI'
   return Pokemon._make(unpack(frm, data[:calcsize(frm)]))
 
-def print_pkinfo6(file, pkinfo):
-  '''Prints some basic information about a Pokémon file.'''
-  print('{}[{}] {}Species: {}{:03d} {}TID: {}{:05d} {}SID: {}{:05d} {}PID: {}0x{:08X} {}TSV: {}{:04d} {}ESV: {}{:04d}'.format(
+def print_pk6info(file, pkinfo):
+  '''Prints some basic information about a Pokémon pk6 file.'''
+  print('{}[{}] {}Species: {}{:03d} {}TID: {}{:06d} {}SID: {}{:05d} {}PID: {}0x{:08X} {}TSV: {}{:04d} {}ESV: {}{:04d}'.format(
     tcolors.YELLOW,
     basename(file),
     tcolors.GREEN, tcolors.CYAN, pkinfo.species,
     tcolors.GREEN, tcolors.CYAN, pkinfo.tid,
     tcolors.GREEN, tcolors.CYAN, pkinfo.sid,
+    tcolors.GREEN, tcolors.CYAN, pkinfo.pid,
+    tcolors.GREEN, tcolors.CYAN, get_tsv(pkinfo.tid, pkinfo.sid),
+    tcolors.GREEN, tcolors.CYAN, get_esv(pkinfo.pid),
+    tcolors.RESET
+  ))
+
+
+def print_pk7info(file, pkinfo):
+  '''Prints some basic information about a Pokémon pk7 file.'''
+  # In generation 7, there's a raw value for the TID and SID but they are
+  # displayed a little different in-game.
+  # TID = TID + SID * 0x10000 (which is 65536)
+  sid_str = '{:010d}'.format(pkinfo.sid * 0x10000)[:4]
+  sid = int(sid_str)
+  tid = pkinfo.tid + pkinfo.sid * 0x10000
+  tid_str = str(tid)[-6:]
+
+  print('{}[{}] {}Species: {}{:03d} {}TID: {}{} {}SID:  {}{:04d} {}PID: {}0x{:08X} {}TSV: {}{:04d} {}ESV: {}{:04d}'.format(
+    tcolors.YELLOW,
+    basename(file),
+    tcolors.GREEN, tcolors.CYAN, pkinfo.species,
+    tcolors.GREEN, tcolors.CYAN, tid_str,
+    tcolors.GREEN, tcolors.CYAN, sid,
     tcolors.GREEN, tcolors.CYAN, pkinfo.pid,
     tcolors.GREEN, tcolors.CYAN, get_tsv(pkinfo.tid, pkinfo.sid),
     tcolors.GREEN, tcolors.CYAN, get_esv(pkinfo.pid),
@@ -66,15 +96,18 @@ def process_pkx(file, out_dir):
   ftype = splitext(file)[1][1:]  # Either 'pk6' or 'pk7'
 
   if ftype == 'pk6':
-    pkinfo = extract_pkdata6(data)
-    print_pkinfo6(file, pkinfo)
+    pkinfo = extract_pkdata(data)
+    print_pk6info(file, pkinfo)
     esv = get_esv(pkinfo.pid)
     ensure_dir(esv, out_dir)
     copy_file(esv, out_dir, file)
 
   if ftype == 'pk7':
-    # not supported yet...
-    pass
+    pkinfo = extract_pkdata(data)
+    print_pk7info(file, pkinfo)
+    esv = get_esv(pkinfo.pid)
+    ensure_dir(esv, out_dir)
+    copy_file(esv, out_dir, file)
 
 def ensure_dir(esv, out_dir):
   dir_name = '{}/{:04}'.format(out_dir, esv)
