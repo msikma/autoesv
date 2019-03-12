@@ -52,7 +52,7 @@ def extract_pkdata(data):
 
 def print_pk6info(file, pkinfo):
   '''Prints some basic information about a Pokémon pk6 file.'''
-  print('{}[{}] {}Species: {}{:03d} {}TID: {}{:06d} {}SID: {}{:05d} {}PID: {}0x{:08X} {}TSV: {}{:04d} {}ESV: {}{:04d}'.format(
+  print('{}[{}] {}Species: {}{:03d} {}TID:  {}{:05d} {}SID: {}{:05d} {}PID: {}0x{:08X} {}TSV: {}{:04d} {}ESV: {}{:04d}'.format(
     tcolors.YELLOW,
     basename(file),
     tcolors.GREEN, tcolors.CYAN, pkinfo.species,
@@ -60,7 +60,7 @@ def print_pk6info(file, pkinfo):
     tcolors.GREEN, tcolors.CYAN, pkinfo.sid,
     tcolors.GREEN, tcolors.CYAN, pkinfo.pid,
     tcolors.GREEN, tcolors.CYAN, get_tsv(pkinfo.tid, pkinfo.sid),
-    tcolors.GREEN, tcolors.CYAN, get_esv(pkinfo.pid),
+    tcolors.GREEN, tcolors.YELLOW, get_esv(pkinfo.pid),
     tcolors.RESET
   ))
 
@@ -83,7 +83,7 @@ def print_pk7info(file, pkinfo):
     tcolors.GREEN, tcolors.CYAN, sid,
     tcolors.GREEN, tcolors.CYAN, pkinfo.pid,
     tcolors.GREEN, tcolors.CYAN, get_tsv(pkinfo.tid, pkinfo.sid),
-    tcolors.GREEN, tcolors.CYAN, get_esv(pkinfo.pid),
+    tcolors.GREEN, tcolors.YELLOW, get_esv(pkinfo.pid),
     tcolors.RESET
   ))
 
