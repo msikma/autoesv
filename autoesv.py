@@ -99,17 +99,17 @@ def process_pkx(file, out_dir, pk_dir):
 
   if ftype == 'pk6':
     pkinfo = extract_pkdata(data)
-    print_pk6info(file, pkinfo)
     esv = get_esv(pkinfo.pid)
     dir_name = ensure_dir(out_dir, esv, 'PK6' if pk_dir else '')
     copy_file(dir_name, file)
+    print_pk6info(file, pkinfo)
 
   if ftype == 'pk7':
     pkinfo = extract_pkdata(data)
-    print_pk7info(file, pkinfo)
     esv = get_esv(pkinfo.pid)
     dir_name = ensure_dir(out_dir, esv, 'PK7' if pk_dir else '')
     copy_file(dir_name, file)
+    print_pk7info(file, pkinfo)
 
 def ensure_dir(out_dir, esv='', pkx=''):
   # Be careful, ESV can be 0. Can't just do 'if esv'!
