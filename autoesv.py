@@ -8,7 +8,8 @@ Note: ESV = Egg Shiny Value and is an integer from 0-4095.
 '''
 from struct import calcsize, unpack
 from collections import namedtuple
-from os import listdir, getcwd, makedirs
+from sys import exit
+from os import listdir, getcwd, makedirs, access, W_OK
 from shutil import copy2
 from os.path import basename, join, splitext, abspath, exists
 import argparse
@@ -18,6 +19,7 @@ class tcolors:
   YELLOW = '\033[93m'
   GREEN = '\033[92m'
   CYAN = '\033[36m'
+  RED = '\033[31m'
   RESET = '\033[00m'
 
 def get_tsv(tid, sid):
@@ -87,7 +89,7 @@ def print_pk7info(file, pkinfo):
     tcolors.RESET
   ))
 
-def process_pkx(file, out_dir):
+def process_pkx(file, out_dir, pk_dir):
   '''
   Processes a single .pk6/.pk7 file. Prints some basic info about the file
   and then moves it to the target directory based on its ESV.
@@ -99,41 +101,67 @@ def process_pkx(file, out_dir):
     pkinfo = extract_pkdata(data)
     print_pk6info(file, pkinfo)
     esv = get_esv(pkinfo.pid)
-    ensure_dir(esv, out_dir)
-    copy_file(esv, out_dir, file)
+    dir_name = ensure_dir(out_dir, esv, 'PK6' if pk_dir else '')
+    copy_file(dir_name, file)
 
   if ftype == 'pk7':
     pkinfo = extract_pkdata(data)
     print_pk7info(file, pkinfo)
     esv = get_esv(pkinfo.pid)
-    ensure_dir(esv, out_dir)
-    copy_file(esv, out_dir, file)
+    dir_name = ensure_dir(out_dir, esv, 'PK7' if pk_dir else '')
+    copy_file(dir_name, file)
 
-def ensure_dir(esv, out_dir):
-  dir_name = '{}/{:04}'.format(out_dir, esv)
-  if not exists(dir_name):
-    makedirs(dir_name)
+def ensure_dir(out_dir, esv='', pkx=''):
+  # Be careful, ESV can be 0. Can't just do 'if esv'!
+  has_esv = esv != ''
 
-def copy_file(esv, out_dir, file):
-  new_name = '{}/{:04}/{}'.format(out_dir, esv, basename(file))
+  dir_name = '{}{}{}{}{}'.format(
+    out_dir,
+    '/' if has_esv and pkx else '',
+    pkx,
+    '/' if has_esv else '',
+    '{:04}'.format(esv) if has_esv else ''
+  )
+  try:
+    if not exists(dir_name):
+      makedirs(dir_name)
+  except:
+    pass
+  if not access(dir_name, W_OK):
+    raise IOError('No write access to directory: {}'.format(dir_name))
+
+  return dir_name
+
+def copy_file(dest_dir, file):
+  new_name = '{}/{}'.format(dest_dir, basename(file))
   copy2(file, new_name)
 
-def process_in_dir(in_dir, out_dir):
+def process_in_dir(in_dir, out_dir, pk_dir):
   for file in listdir(in_dir):
     current = join(in_dir, file)
-    process_pkx(current, out_dir)
+    process_pkx(current, out_dir, pk_dir)
 
 def main():
-  parser = argparse.ArgumentParser(description='Organizes Pokémon egg files (.pk6 and .pk7) based on their ESV. The egg files are read from a source directory and then copied to a destination directory, separated in subdirectories named after the egg\'s ESV.')
+  parser = argparse.ArgumentParser(description='Organizes Pokémon egg files (.pk6 and .pk7) based on their ESV. The egg files are read from a source directory and then copied to a destination directory, separated in subdirectories named after the egg\'s ESV. If --pk-dir is enabled, the resulting file structure is: {PK6,PK7} > {$ESV} > ... .pk6 or .pk7 files.')
 
   parser.add_argument('src', type=str, help='source directory containing unsorted egg files')
   parser.add_argument('dst', type=str, help='destination directory to copy results to')
+  parser.add_argument('--pk-dir', action='store_true', help='copies files to a top "pk6" and "pk7" directory')
   args = parser.parse_args()
 
   in_dir = abspath('{}/{}'.format(getcwd(), args.src))
   out_dir = abspath('{}/{}'.format(getcwd(), args.dst))
   print('Processing files in directory: {}'.format(in_dir))
   print('Saving to directory: {}'.format(out_dir))
-  process_in_dir(in_dir, out_dir)
+
+  # Ensure that our output directory exist.
+  # ESV and PK6/PK7 directories are made as needed during processing.
+  try:
+    ensure_dir(out_dir)
+  except IOError as err:
+    print('{}{}{}'.format(tcolors.RED, str(err), tcolors.RESET))
+    exit(1)
+
+  process_in_dir(in_dir, out_dir, args.pk_dir)
 
 main()
