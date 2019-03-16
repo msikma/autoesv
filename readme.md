@@ -20,6 +20,10 @@ The image above shows a terminal running the program. It displays some basic inf
 
 As you can see, the eggs have been copied to subdirectories by ESV.
 
+#### PK6/PK7 directory
+
+If you supply the `--pk-dir` flag when running the script, two directories `PK6` and `PK7` will sit at the top of the hierarchy (inside the 'out' directory), in case you prefer them separate.
+
 ### Links
 
 * [/r/svexchange](https://www.reddit.com/r/SVExchange/) - the best resource for hatching shiny Pokémon using the ESV method
