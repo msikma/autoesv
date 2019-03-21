@@ -8,7 +8,7 @@ Run `./autoesv.py --help` for usage information. This script has no third party 
 
 #### Example
 
-My recommendation is that you make a directory called 'in' and put all your `.pk6` and `.pk7` files in there. Then make an empty directory called 'out'. This way you can just run `./autoesv.py ./in ./out` and it will organize all your egg files into the 'out' directory.
+My recommendation is that you make a directory called 'in' and put all your `.pk6` and `.pk7` files in there. Then make an empty directory called 'out'. This way you can just run `./autoesv.py ./in ./out --pk-dir` and it will organize all your egg files into the 'out' directory.
 
 Here's an example of how that would work:
 
@@ -18,11 +18,11 @@ The image above shows a terminal running the program. It displays some basic inf
 
 <img src="https://raw.githubusercontent.com/msikma/autoesv/master/resources/example_2.png">
 
-As you can see, the eggs have been copied to subdirectories by ESV.
+As you can see, the eggs have been copied to subdirectories by ESV, and sorted by generation.
 
 #### PK6/PK7 directory
 
-If you supply the `--pk-dir` flag when running the script, two directories `PK6` and `PK7` will sit at the top of the hierarchy (inside the 'out' directory), in case you prefer them separate.
+If you supply the `--pk-dir` flag when running the script, two directories `PK6` and `PK7` will sit at the top of the hierarchy (inside the 'out' directory), in case you prefer them separate. This is recommended. If you don't pass this flag, generation 6 and 7 eggs will be placed together in the same ESV subdirectory.
 
 ### Links
 
